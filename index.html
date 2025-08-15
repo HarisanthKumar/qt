@@ -238,6 +238,13 @@
         .all-time-stats h2 {
             margin-bottom: 20px;
         }
+        .time-label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #555;
+            text-align: center;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -387,8 +394,10 @@
                 questions: 0,
                 timeSpent: 0,
                 questionTimes: [],
-                sessionTimeDistribution: Array(timeBuckets.length).fill(0)
-            }
+                sessionTimeDistribution: Array(timeBuckets.length).fill(0),
+                bucketTimes: Array(timeBuckets.length).fill(0) // Track time spent in each bucket
+            },
+            allTimeBucketTimes: Array(timeBuckets.length).fill(0) // Track all-time time in each bucket
         };
         
         // Time Distribution Chart (Current Session)
@@ -431,6 +440,15 @@
                     },
                     legend: {
                         display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            afterLabel: function(context) {
+                                const index = context.dataIndex;
+                                const time = data.currentSession.bucketTimes[index];
+                                return `Total time: ${formatShortTime(time)}`;
+                            }
+                        }
                     }
                 }
             }
@@ -476,6 +494,15 @@
                     },
                     legend: {
                         display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            afterLabel: function(context) {
+                                const index = context.dataIndex;
+                                const time = data.allTimeBucketTimes[index];
+                                return `Total time: ${formatShortTime(time)}`;
+                            }
+                        }
                     }
                 }
             }
@@ -638,7 +665,10 @@
             else bucketIndex = minutes;
             
             data.currentSession.sessionTimeDistribution[bucketIndex]++;
+            data.currentSession.bucketTimes[bucketIndex] += timeInSeconds;
+            
             data.timeDistribution[bucketIndex]++;
+            data.allTimeBucketTimes[bucketIndex] += timeInSeconds;
         }
         
         function togglePause() {
@@ -706,7 +736,8 @@
                 questions: 0,
                 timeSpent: 0,
                 questionTimes: [],
-                sessionTimeDistribution: Array(timeBuckets.length).fill(0)
+                sessionTimeDistribution: Array(timeBuckets.length).fill(0),
+                bucketTimes: Array(timeBuckets.length).fill(0)
             };
             sessionBtn.textContent = 'End Session (S)';
             pauseBtn.disabled = false;
@@ -774,7 +805,8 @@
                 questions: 0,
                 timeSpent: 0,
                 questionTimes: [],
-                sessionTimeDistribution: Array(timeBuckets.length).fill(0)
+                sessionTimeDistribution: Array(timeBuckets.length).fill(0),
+                bucketTimes: Array(timeBuckets.length).fill(0)
             };
             sessionBtn.textContent = 'Begin Session (S)';
             pauseBtn.disabled = true;
@@ -964,6 +996,7 @@
             localStorage.setItem('timeDistribution', JSON.stringify(data.timeDistribution));
             localStorage.setItem('questionHistory', JSON.stringify(data.questionHistory));
             localStorage.setItem('sessionHistory', JSON.stringify(data.sessionHistory));
+            localStorage.setItem('allTimeBucketTimes', JSON.stringify(data.allTimeBucketTimes));
         }
     </script>
 </body>
